@@ -1,0 +1,23 @@
+name: Test Kubernetes Install
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-installation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run installation script
+        run: |
+          chmod +x bash script installation.sh
+          sudo ./bash script installation.sh
+
+      - name: Verify Kubernetes installation
+        run: |
+          kubectl get nodes
+          kubectl get pods -A
