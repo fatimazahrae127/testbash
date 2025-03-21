@@ -13,20 +13,24 @@ wait_for_pod() {
   echo "Pod with label $label is running!"
 }
 
-# Installer les dépendances
+# Mettre à jour les dépôts et installer les dépendances nécessaires
 sudo apt update && sudo apt install -y curl wget apt-transport-https gnupg lsb-release
 
 # Désactiver le swap (obligatoire pour Kubernetes)
 sudo swapoff -a
 sudo sed -i '/ swap / s/^/#/' /etc/fstab
 
-# Installer kubeadm, kubelet et kubectl
-sudo apt-get update
-sudo apt-get install -y apt-transport-https ca-certificates curl
-sudo curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
+# Ajouter la clé GPG pour le dépôt Kubernetes
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/kubernetes-archive-keyring.gpg > /dev/null
+
+# Ajouter le dépôt Kubernetes pour Ubuntu
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-stable main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# Mettre à jour les dépôts et installer kubelet, kubeadm et kubectl
+sudo apt update
+sudo apt install -y kubelet kubeadm kubectl
+
+# Marquer kubelet, kubeadm et kubectl pour éviter leur mise à jour accidentelle
 sudo apt-mark hold kubelet kubeadm kubectl
 
 # Initialiser le cluster Kubernetes avec kubeadm
