@@ -14,27 +14,18 @@ wait_for_pod() {
 }
 
 # Mettre à jour les dépôts et installer les dépendances nécessaires
-sudo apt update && sudo apt install -y curl wget apt-transport-https gnupg lsb-release
-
-# Désactiver le swap (obligatoire pour Kubernetes)
-sudo swapoff -a
-sudo sed -i '/ swap / s/^/#/' /etc/fstab
-
-# Ajouter la clé GPG pour le dépôt Kubernetes
-curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/kubernetes-archive-keyring.gpg > /dev/null
-
-# Ajouter le dépôt Kubernetes pour Ubuntu
-echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-stable main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-
-# Mettre à jour les dépôts et installer kubelet, kubeadm et kubectl
-sudo apt update
-sudo apt install -y kubelet kubeadm kubectl
-
-# Marquer kubelet, kubeadm et kubectl pour éviter leur mise à jour accidentelle
+sudo apt-get update
+# apt-transport-https may be a dummy package; if so, you can skip that package
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+# If the directory `/etc/apt/keyrings` does not exist, it should be created before the curl command, read the note below.
+sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+# This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
-
-# Initialiser le cluster Kubernetes avec kubeadm
-sudo kubeadm init --pod-network-cidr=192.168.1.0/16
+sudo systemctl enable --now kubelet
 
 # Configurer kubectl pour l'utilisateur actuel
 mkdir -p $HOME/.kube
