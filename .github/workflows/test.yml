@@ -14,8 +14,8 @@ jobs:
 
       - name: Run installation script
         run: |
-          chmod +x script installation.sh
-          sudo script installation.sh
+          chmod +x bash_script_installation.sh
+          sudo ./bash_script_installation.sh
 
       - name: Verify Kubernetes installation
         run: |
